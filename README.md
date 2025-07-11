@@ -155,6 +155,42 @@ cd backend
 - Pagination ou recherche dans la liste d’images
 - Personnalisation avancée des transformations Cloudinary
 
+### Modération automatique d’images (Rekognition AI Moderation)
+
+Pour activer la modération automatique des images uploadées (détection de contenu inapproprié, nudité, violence, etc.) :
+
+1. Active l’add-on "Rekognition AI Moderation" dans ton compte Cloudinary (section Add-ons du dashboard).
+2. Lors de l’upload, ajoute le paramètre `moderation: 'aws_rek'` dans l’appel à l’API Cloudinary (voir documentation Cloudinary et SDK Java).
+3. Les images seront automatiquement marquées comme "approved" ou "rejected" selon le score de confiance et les catégories détectées.
+4. Tu peux lister, filtrer ou overrider manuellement le statut de modération via l’API Admin ou l’interface Cloudinary.
+
+👉 Documentation officielle : [Cloudinary Rekognition AI Moderation](https://cloudinary.com/documentation/aws_rekognition_ai_moderation_addon)
+
+---
+
+## Fichiers de configuration à ne pas oublier
+
+### Frontend : .env.local
+- **Emplacement** : `frontend/.env.local`
+- **Exemple de contenu** :
+  ```env
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=ton_cloud_name
+  ```
+- Ce fichier ne doit pas être versionné (il est ignoré par `.gitignore`).
+
+### Backend : application.properties
+- **Emplacement** : `backend/src/main/resources/application.properties`
+- **Exemple de contenu** :
+  ```properties
+  cloudinary.cloud-name=ton_cloud_name
+  cloudinary.api-key=ta_api_key
+  cloudinary.api-secret=ton_api_secret
+  cloudinary.folder=thumbnails_poc
+  spring.servlet.multipart.max-file-size=10MB
+  spring.servlet.multipart.max-request-size=10MB
+  ```
+- Ce fichier ne doit pas être versionné (il est ignoré par `.gitignore`).
+
 ---
 
 **Projet prêt à l’emploi pour upload, affichage optimisé et modération d’images avec Next.js, Spring Boot et Cloudinary !** 
