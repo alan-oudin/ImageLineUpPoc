@@ -18,11 +18,11 @@ public class UploadController {
     @PostMapping
     public ResponseEntity<UploadResponse> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
-            String thumbnailUrl = cloudinaryService.uploadAndGetThumbnailUrl(file);
-            return ResponseEntity.ok(new UploadResponse(thumbnailUrl, "Upload réussi"));
+            CloudinaryService.UploadResult result = cloudinaryService.uploadAndGetThumbnailInfo(file);
+            return ResponseEntity.ok(new UploadResponse(result.thumbnailUrl, "Upload réussi", result.originalUrl, result.publicId, result.originalSize, result.thumbnailSize));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new UploadResponse(null, "Erreur lors de l'upload : " + e.getMessage()));
+                    .body(new UploadResponse(null, "Erreur lors de l'upload : " + e.getMessage(), null, null, 0, 0));
         }
     }
 } 

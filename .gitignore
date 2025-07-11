@@ -5,3 +5,4 @@ logs/
 *.tmp
 *.swp
 *.swo 
+node_modules

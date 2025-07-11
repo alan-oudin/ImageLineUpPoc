@@ -34,3 +34,4 @@ build/
 # Fichiers de configuration sensibles Spring Boot
 application.properties
 application-*.properties
+.gradle/

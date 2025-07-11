@@ -1,17 +1,27 @@
 "use client";
 import React, { useState } from "react";
+import { CldImage } from "next-cloudinary";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [originalSize, setOriginalSize] = useState<number | null>(null);
+  const [thumbnailSize, setThumbnailSize] = useState<number | null>(null);
+  const [originalName, setOriginalName] = useState<string>("");
+  const [originalUrl, setOriginalUrl] = useState<string>("");
+  const [publicId, setPublicId] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      setOriginalName(e.target.files[0].name);
+      setOriginalSize(e.target.files[0].size);
+      setOriginalUrl("");
       setThumbnailUrl("");
       setMessage("");
+      setThumbnailSize(null);
     }
   };
 
@@ -24,6 +34,8 @@ export default function Home() {
     setLoading(true);
     setMessage("");
     setThumbnailUrl("");
+    setOriginalUrl("");
+    setThumbnailSize(null);
     const formData = new FormData();
     formData.append("file", file);
     try {
@@ -35,6 +47,10 @@ export default function Home() {
       if (response.ok && data.thumbnailUrl) {
         setThumbnailUrl(data.thumbnailUrl);
         setMessage(data.message || "Upload réussi !");
+        setOriginalUrl(data.originalUrl || "");
+        setOriginalSize(data.originalSize || file.size);
+        setThumbnailSize(data.thumbnailSize !== undefined ? data.thumbnailSize : null);
+        setPublicId(data.publicId || "");
       } else {
         setMessage(data.message || "Erreur lors de l'upload.");
       }
@@ -55,9 +71,27 @@ export default function Home() {
         </button>
       </form>
       {message && <div style={{ marginBottom: 10, color: thumbnailUrl ? "green" : "red" }}>{message}</div>}
-      {thumbnailUrl && (
+      {(file || thumbnailUrl) && (
         <div style={{ border: "1px solid #ccc", padding: 10, borderRadius: 8, maxWidth: 320 }}>
-          <img src={thumbnailUrl} alt="Thumbnail" style={{ maxWidth: "100%", height: "auto" }} />
+          <h3>Informations sur l'image</h3>
+          {originalName && <div><b>Nom :</b> {originalName}</div>}
+          {originalSize !== null && <div><b>Taille d'origine :</b> {Math.round(originalSize / 1024)} Ko</div>}
+          {originalUrl && <div><b>URL d'origine :</b> <a href={originalUrl} target="_blank" rel="noopener noreferrer">{originalUrl}</a></div>}
+          {publicId && (
+            <>
+              <b>Thumbnail :</b>
+              <div style={{ marginTop: 10 }}>
+                <CldImage
+                  src={publicId}
+                  width={300}
+                  height={300}
+                  alt="Thumbnail"
+                  style={{ maxWidth: "100%", height: "auto" }}
+                />
+              </div>
+            </>
+          )}
+          {thumbnailSize !== null && thumbnailSize > 0 && <div><b>Taille du thumbnail :</b> {Math.round(thumbnailSize / 1024)} Ko</div>}
         </div>
       )}
     </main>
