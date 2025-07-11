@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CldImage } from "next-cloudinary";
 
 export default function Home() {
@@ -12,6 +12,11 @@ export default function Home() {
   const [originalName, setOriginalName] = useState<string>("");
   const [originalUrl, setOriginalUrl] = useState<string>("");
   const [publicId, setPublicId] = useState<string>("");
+
+  // Modération : liste des images Cloudinary
+  const [images, setImages] = useState<{ publicId: string; url: string }[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [modMessage, setModMessage] = useState<string>("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -61,6 +66,38 @@ export default function Home() {
     }
   };
 
+  // Charger la liste des images au montage
+  useEffect(() => {
+    fetch("http://localhost:8080/api/upload/images")
+      .then((res) => res.json())
+      .then((data) => setImages(data || []));
+  }, []);
+
+  const handleSelect = (publicId: string) => {
+    setSelected((prev) =>
+      prev.includes(publicId)
+        ? prev.filter((id) => id !== publicId)
+        : [...prev, publicId]
+    );
+  };
+
+  const handleDelete = async () => {
+    if (selected.length === 0) return;
+    setModMessage("");
+    const res = await fetch("http://localhost:8080/api/upload/images/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ publicIds: selected }),
+    });
+    if (res.ok) {
+      setImages((imgs) => imgs.filter((img) => !selected.includes(img.publicId)));
+      setSelected([]);
+      setModMessage("Suppression réussie.");
+    } else {
+      setModMessage("Erreur lors de la suppression.");
+    }
+  };
+
   return (
     <main style={{ maxWidth: 400, margin: "2em auto", fontFamily: "Arial, sans-serif" }}>
       <h1>Upload d'image (POC Next.js & Spring Boot)</h1>
@@ -94,6 +131,42 @@ export default function Home() {
           {thumbnailSize !== null && thumbnailSize > 0 && <div><b>Taille du thumbnail :</b> {Math.round(thumbnailSize / 1024)} Ko</div>}
         </div>
       )}
+      <hr style={{ margin: "2em 0" }} />
+      <section>
+        <h2>Modération des images Cloudinary</h2>
+        {modMessage && <div style={{ color: modMessage.includes("Erreur") ? "red" : "green" }}>{modMessage}</div>}
+        <button onClick={handleDelete} disabled={selected.length === 0} style={{ marginBottom: 10 }}>
+          Supprimer la sélection
+        </button>
+        <div style={{ maxHeight: 300, overflowY: "auto", border: "1px solid #ccc", borderRadius: 8, padding: 10 }}>
+          {images.length === 0 ? (
+            <div>Aucune image trouvée.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Nom (public_id)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {images.map((img) => (
+                  <tr key={img.publicId} style={{ borderBottom: "1px solid #eee" }}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(img.publicId)}
+                        onChange={() => handleSelect(img.publicId)}
+                      />
+                    </td>
+                    <td style={{ fontSize: 12 }}>{img.publicId}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </section>
     </main>
   );
 }

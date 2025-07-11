@@ -8,6 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/upload")
 public class UploadController {
@@ -23,6 +26,27 @@ public class UploadController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new UploadResponse(null, "Erreur lors de l'upload : " + e.getMessage(), null, null, 0, 0));
+        }
+    }
+
+    @GetMapping("/images")
+    public ResponseEntity<List<CloudinaryService.ImageInfo>> listImages() {
+        try {
+            List<CloudinaryService.ImageInfo> images = cloudinaryService.listImages();
+            return ResponseEntity.ok(images);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/images/delete")
+    public ResponseEntity<?> deleteImages(@RequestBody Map<String, List<String>> body) {
+        try {
+            List<String> publicIds = body.get("publicIds");
+            cloudinaryService.deleteImages(publicIds);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 } 

@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -61,5 +63,36 @@ public class CloudinaryService {
         long originalSize = file.getSize();
         long thumbnailSize = getRemoteFileSize(thumbnailUrl);
         return new UploadResult(thumbnailUrl, originalUrl, publicId, originalSize, thumbnailSize);
+    }
+
+    public List<ImageInfo> listImages() throws Exception {
+        List<ImageInfo> images = new ArrayList<>();
+        Map result = cloudinary.api().resources(ObjectUtils.asMap(
+            "type", "upload",
+            "prefix", folder,
+            "max_results", 100
+        ));
+        List<Map> resources = (List<Map>) result.get("resources");
+        for (Map res : resources) {
+            String publicId = (String) res.get("public_id");
+            String url = (String) res.get("secure_url");
+            images.add(new ImageInfo(publicId, url));
+        }
+        return images;
+    }
+
+    public static class ImageInfo {
+        public String publicId;
+        public String url;
+        public ImageInfo(String publicId, String url) {
+            this.publicId = publicId;
+            this.url = url;
+        }
+    }
+
+    public void deleteImages(List<String> publicIds) throws Exception {
+        for (String publicId : publicIds) {
+            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        }
     }
 } 
